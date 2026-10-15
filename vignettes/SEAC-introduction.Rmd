@@ -1,0 +1,103 @@
+---
+title: "KD-tree BLADE QC and MaxMin testing with SEAC"
+author: "SEAC Development Team"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{KD-tree BLADE QC and MaxMin testing with SEAC}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, message=FALSE}
+library(SEAC)
+library(SpatialExperiment)
+library(S4Vectors)
+```
+
+# Introduction
+
+SEAC performs a KD-tree BLADE mask and a general MaxMin gene-set spatial co-localization analysis for Visium HD. Capture-boundary and non-tissue positions are KD-tree seeds; bins whose nearest seed has Euclidean distance at most one are excluded.
+
+The published BLADE project also includes slide-level artefact tests. SEAC documents its narrower local KD-tree HD mask rather than claiming to implement those additional methods.
+
+# A small SpatialExperiment
+
+```{r toy-data}
+counts <- rbind(
+    A = c(1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L),
+    B = c(0L, 0L, 1L, 0L, 0L, 0L, 1L, 0L)
+)
+colnames(counts) <- paste0("bin", 1:8)
+coords <- expand.grid(array_row = 1:4, array_col = 1:2)
+spe <- SpatialExperiment(
+    assays = list(counts = counts),
+    colData = DataFrame(coords, row.names = colnames(counts)),
+    spatialCoordsNames = c("array_col", "array_row")
+)
+sets <- list(left = "A", right = "B")
+```
+
+# Score and test
+
+```{r score-and-test}
+scored <- maxMinScore(spe, sets)
+head(as.data.frame(colData(scored)))
+
+out <- tempfile("seac-permutation-")
+tested <- maxMinPermutationTest(
+    scored, sets,
+    n_permutations = 10L,
+    chunk_size = 5L,
+    output_dir = out,
+    seed = 1L
+)
+head(loadSEACResults(out))
+```
+
+# Space Ranger data
+
+For a standard Space Ranger Visium HD output, use `runSEAC()` with its root,
+`outs`, or a `square_XXXum` path. It writes a HDF5-backed
+`SpatialExperiment`, a complete audit mask, and a JSON manifest. Supply your
+own named `gene_sets`; scored columns and metadata remain available when the
+saved post-QC object is reopened in another R session.
+
+Gene sets can contain Ensembl feature IDs or 10x gene symbols. SEAC resolves
+the latter from `rowData(qc)$Symbol`, including every feature row that shares a
+requested symbol.
+
+```{r spaceranger, eval=FALSE}
+gene_sets <- list(
+    Paneth = c("LYZ", "DEFA5"),
+    Goblet = c("MUC2", "CLCA1")
+)
+
+fit <- runSEAC(
+    input_dir = "/path/to/spaceranger-output",
+    output_dir = "sample_SEAC",
+    bin_size = "016",
+    gene_sets = gene_sets,
+    permutation = TRUE,
+    n_permutations = 20L,
+    chunk_size = 5L
+)
+
+post_qc <- HDF5Array::loadHDF5SummarizedExperiment(
+    "sample_SEAC/post_qc/spe"
+)
+results <- loadSEACResults("sample_SEAC/permutation")
+```
+
+Twenty permutations are useful only as a quick workflow smoke test. Use the
+default 5,000 or another justified value for a formal analysis.
+
+# Reproducibility
+
+The test stores a manifest and block checkpoints. Re-run the same call with the same output directory and `resume = TRUE` to continue an interrupted job. The random seed is assigned per permutation, so results do not depend on how the 5,000 iterations are chunked.
+
+```{r session-info}
+sessionInfo()
+```

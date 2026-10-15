@@ -1,0 +1,12 @@
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+check/
+*.Rcheck/
+*.BiocCheck/
+SEAC.Rcheck/
+SEAC_*.tar.gz
+.realdata/
+real-data/
+validation-output/

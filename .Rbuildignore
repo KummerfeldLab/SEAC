@@ -1,0 +1,12 @@
+^VisHD-main$
+^VisHD-main\.zip$
+^PLAN\.md$
+^METHODS\.md$
+^\.github$
+^\.gitignore$
+^SEAC_[^/]+[.]tar[.]gz$
+^.*[.]Rcheck$
+^.*[.]BiocCheck$
+^\.realdata$
+^real-data$
+^validation-output$

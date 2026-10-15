@@ -1,0 +1,22 @@
+citHeader("To cite SEAC in publications use:")
+
+citEntry(
+    entry = "Manual",
+    title = "SEAC: KD-Tree Quality Control and Gene-Set Co-Localization for Visium HD",
+    author = "SEAC Development Team",
+    year = "2026",
+    note = "R package version 0.99.1"
+)
+
+citEntry(
+    entry = "Article",
+    title = "Artifacts in spatial transcriptomics data: their detection, importance, prevalence, and prevention",
+    author = "Erich Kummerfeld and Leland Williams and Yinzhao Wang and others",
+    journal = "Briefings in Bioinformatics",
+    year = "2025",
+    volume = "26",
+    number = "4",
+    pages = "bbaf306",
+    doi = "10.1093/bib/bbaf306",
+    textVersion = "Kummerfeld E, Williams L, Wang Y, et al. (2025). Artifacts in spatial transcriptomics data: their detection, importance, prevalence, and prevention. Briefings in Bioinformatics, 26(4), bbaf306."
+)
