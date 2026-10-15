@@ -23,7 +23,6 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
 }
 remotes::install_github(
     "KummerfeldLab/VisHD_R",
-    dependencies = TRUE,
     build_vignettes = FALSE
 )
 ```
@@ -41,7 +40,6 @@ After cloning or downloading this repository, use the same setup above and run:
 ```r
 remotes::install_local(
     "/path/to/VisHD_R",
-    dependencies = TRUE,
     build_vignettes = FALSE
 )
 ```
