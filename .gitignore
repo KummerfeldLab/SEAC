@@ -10,3 +10,6 @@ SEAC_*.tar.gz
 .realdata/
 real-data/
 validation-output/
+METHODS.md
+NEWS.md
+PLAN.md
