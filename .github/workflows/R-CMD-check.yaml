@@ -22,9 +22,7 @@ jobs:
           use-public-rspm: true
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, any::BiocCheck
+          extra-packages: any::rcmdcheck
           needs: check
       - name: Check
         uses: r-lib/actions/check-r-package@v2
-      - name: BiocCheck
-        run: Rscript -e 'BiocCheck::BiocCheck(".", `new-package` = TRUE)'

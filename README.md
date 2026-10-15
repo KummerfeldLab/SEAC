@@ -10,7 +10,9 @@ The R package is named `SEAC`; its GitHub repository is `VisHD_R`.
 
 ## Install from GitHub
 
-SEAC requires R 4.4 or later and Bioconductor packages. Run this once in R:
+SEAC is not currently distributed through Bioconductor. Install it directly
+from GitHub. It requires R 4.4 or later and several Bioconductor dependencies;
+the following setup lets R resolve those dependencies before installing SEAC:
 
 ```r
 if (!requireNamespace("BiocManager", quietly = TRUE)) {
