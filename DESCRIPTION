@@ -16,6 +16,8 @@ Description: Imports 10x Genomics Visium HD Space Ranger outputs, applies a
     and evaluates a general MaxMin gene-set spatial co-localization statistic.
     A UMI-level Monte Carlo permutation test supports within-sample and
     pooled-sample null models while using disk-backed results and checkpoints.
+    The within-sample model preserves each sample's gene-category totals,
+    whereas the pooled model preserves those totals across the cohort.
 License: Artistic-2.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

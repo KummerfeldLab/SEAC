@@ -146,13 +146,21 @@ within-sample seed scheme cannot resume within-sample checkpoints made with
 SEAC 0.99.1; start those analyses in a new output directory. Pooled-mode
 checkpoints are unchanged.
 
-## Real-data smoke test
+## Real-data validation
 
 The staged workflow was tested with the official 10x Genomics Visium HD
 Mouse Small Intestine binned outputs. The 16 µm test input contained 19,059
 features, 91,033 filtered bins, and 138,666,717 UMIs. SEAC retained 83,408 bins
 and successfully wrote and reloaded its post-QC object, checkpoints, and
-permutation results. No 10x data are included in this repository.
+permutation results. A full run with SEAC 0.99.3 then completed 5,000
+within-sample permutations on the retained bins using the three example gene
+sets above (seed `20261019`, chunk size 100, eight workers). Validation checked
+that all 5,000 permutations were recorded, all 83,408 result rows were
+reloadable, and the score, permutation-count, and p-value fields met their
+expected bounds. This run produced 19,319 `legacy_hotspot` calls and zero
+BH-FDR-significant bins. These are workflow-validation results for the selected
+gene sets, not evidence of a biological discovery or validation of every
+possible gene-set analysis. No 10x data are included in this repository.
 
 The source data are described in the [10x Genomics Visium HD analysis
 guide](https://www.10xgenomics.com/analysis-guides/segmentation-visium-hd).
