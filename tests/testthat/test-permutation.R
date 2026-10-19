@@ -121,12 +121,49 @@ test_that("chunking is deterministic and pooled mode returns every sample", {
     )
     expect_equal(one$p_value, three$p_value)
 
+    pooled_dir <- tempfile("seac_pooled_")
     pooled <- maxMinPermutationTest(
         list(a = spe, b = spe), toy_gene_sets, mode = "pooled",
-        n_permutations = 2L, output_dir = tempfile("seac_pooled_")
+        n_permutations = 2L, output_dir = pooled_dir
     )
     expect_named(pooled, c("a", "b"))
     expect_true(all(vapply(pooled, inherits, logical(1L), "SpatialExperiment")))
+    pooled_checkpoint <- readRDS(file.path(
+        pooled_dir, "checkpoints", "checkpoint_000002.rds"
+    ))
+    expect_identical(pooled_checkpoint$specification$version, 2L)
+    expect_false("within_seed_scheme" %in% names(pooled_checkpoint$specification))
+})
+
+test_that("within-sample permutations are independent of cohort composition", {
+    target <- make_toy_spe()
+    other <- make_toy_spe()
+    SummarizedExperiment::assay(other, "counts")[1L, 1L] <- 2L
+
+    single_dir <- tempfile("seac-single-")
+    single <- maxMinPermutationTest(
+        target, toy_gene_sets, mode = "within", n_permutations = 5L,
+        seed = 19L, output_dir = single_dir
+    )
+    combined <- maxMinPermutationTest(
+        list(other = other, target = target), toy_gene_sets,
+        mode = "within", n_permutations = 5L,
+        seed = 19L, output_dir = tempfile("seac-combined-")
+    )
+    reordered <- maxMinPermutationTest(
+        list(target = target, other = other), toy_gene_sets,
+        mode = "within", n_permutations = 5L,
+        seed = 19L, output_dir = tempfile("seac-reordered-")
+    )
+
+    for (field in c("n_null_less", "n_null_leq", "p_value", "legacy_hotspot")) {
+        expect_equal(combined$target[[field]], single[[field]])
+        expect_equal(reordered$target[[field]], single[[field]])
+    }
+    within_checkpoint <- readRDS(file.path(
+        single_dir, "checkpoints", "checkpoint_000005.rds"
+    ))
+    expect_identical(within_checkpoint$specification$version, 3L)
 })
 
 test_that("permutation testing preserves the caller's random state", {

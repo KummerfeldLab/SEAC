@@ -163,7 +163,6 @@ runBladeQC <- function(input_dir, output_dir = NULL, bin_size = "002",
     ))
     HDF5Array::loadHDF5SummarizedExperiment(spe_dir)
 }
-
 .seac_load_post_qc <- function(path) {
     if (inherits(path, "SpatialExperiment")) {
         return(path)
@@ -172,45 +171,6 @@ runBladeQC <- function(input_dir, output_dir = NULL, bin_size = "002",
     spe_dir <- if (dir.exists(file.path(path, "spe"))) file.path(path, "spe") else path
     if (!file.exists(file.path(spe_dir, "se.rds"))) {
         .seac_abort("Expected an HDF5-backed SpatialExperiment at: ", spe_dir)
-    }
-    HDF5Array::loadHDF5SummarizedExperiment(spe_dir)
-}
-
-.seac_persist_post_qc_metadata <- function(spe, path) {
-    if (!inherits(spe, "SpatialExperiment")) {
-        .seac_abort("`spe` must be a SpatialExperiment.")
-    }
-    .seac_assert_scalar_character(path, "path")
-    spe_dir <- if (dir.exists(file.path(path, "spe"))) file.path(path, "spe") else path
-    rds_path <- file.path(spe_dir, "se.rds")
-    if (!file.exists(rds_path)) {
-        .seac_abort("Expected an HDF5-backed SpatialExperiment at: ", spe_dir)
-    }
-
-    # HDF5Array serializes assay links relative to se.rds.  Preserve that
-    # skeleton and update only the in-memory fields changed by maxMinScore(),
-    # avoiding a second copy of a potentially very large Visium HD assay.
-    serialized <- readRDS(rds_path)
-    same_identity <-
-        inherits(serialized, "SpatialExperiment") &&
-        identical(dim(serialized), dim(spe)) &&
-        identical(rownames(serialized), rownames(spe)) &&
-        identical(colnames(serialized), colnames(spe))
-    if (!same_identity) {
-        .seac_abort("The scored object does not match the saved post-QC object.")
-    }
-    serialized <- SummarizedExperiment::`colData<-`(
-        serialized, value = SummarizedExperiment::colData(spe)
-    )
-    serialized <- S4Vectors::`metadata<-`(
-        serialized, value = S4Vectors::metadata(spe)
-    )
-
-    temporary <- tempfile("seac-post-qc-", tmpdir = spe_dir, fileext = ".rds")
-    on.exit(if (file.exists(temporary)) unlink(temporary), add = TRUE)
-    saveRDS(serialized, temporary, version = 2L)
-    if (!file.copy(temporary, rds_path, overwrite = TRUE, copy.mode = TRUE)) {
-        .seac_abort("Could not persist scored post-QC metadata: ", rds_path)
     }
     HDF5Array::loadHDF5SummarizedExperiment(spe_dir)
 }

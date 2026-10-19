@@ -1,7 +1,7 @@
 Package: SEAC
 Type: Package
 Title: KD-Tree Quality Control and Gene-Set Co-Localization for Visium HD
-Version: 0.99.1
+Version: 0.99.2
 Authors@R: c(
     person("SEAC", "Development Team", role = c("aut", "cre"),
            email = "maintainer@example.org")

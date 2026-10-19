@@ -40,7 +40,7 @@ spe <- SpatialExperiment(
 sets <- list(left = "A", right = "B")
 ```
 
-# Score and test
+# Score and test a prefiltered toy object
 
 ```{r score-and-test}
 scored <- maxMinScore(spe, sets)
@@ -59,11 +59,11 @@ head(loadSEACResults(out))
 
 # Space Ranger data
 
-For a standard Space Ranger Visium HD output, use `runSEAC()` with its root,
-`outs`, or a `square_XXXum` path. It writes a HDF5-backed
-`SpatialExperiment`, a complete audit mask, and a JSON manifest. Supply your
-own named `gene_sets`; scored columns and metadata remain available when the
-saved post-QC object is reopened in another R session.
+For a standard Space Ranger Visium HD output, call `runBladeQC()` yourself
+with its root, `outs`, or a `square_XXXum` path. It saves a HDF5-backed
+`SpatialExperiment`, a complete audit mask, and a JSON manifest. Review the
+saved QC output before starting the permutation stage. The permutation
+function reads the saved object; it never applies BLADE automatically.
 
 Gene sets can contain Ensembl feature IDs or 10x gene symbols. SEAC resolves
 the latter from `rowData(qc)$Symbol`, including every feature row that shares a
@@ -75,24 +75,61 @@ gene_sets <- list(
     Goblet = c("MUC2", "CLCA1")
 )
 
-fit <- runSEAC(
+qc_dir <- "sample_SEAC_post_qc"
+qc <- runBladeQC(
     input_dir = "/path/to/spaceranger-output",
-    output_dir = "sample_SEAC",
-    bin_size = "016",
+    output_dir = qc_dir,
+    bin_size = "016"
+)
+
+# The BLADE mask is saved at file.path(qc_dir, "blade_mask.h5").
+# The post-QC object is saved at file.path(qc_dir, "spe").
+# This call may be made in a later R session.
+tested <- maxMinPermutationTest(
+    x = qc_dir,
     gene_sets = gene_sets,
-    permutation = TRUE,
+    output_dir = "sample_SEAC_permutation",
     n_permutations = 20L,
     chunk_size = 5L
 )
 
 post_qc <- HDF5Array::loadHDF5SummarizedExperiment(
-    "sample_SEAC/post_qc/spe"
+    file.path(qc_dir, "spe")
 )
-results <- loadSEACResults("sample_SEAC/permutation")
+results <- loadSEACResults("sample_SEAC_permutation")
 ```
 
 Twenty permutations are useful only as a quick workflow smoke test. Use the
 default 5,000 or another justified value for a formal analysis.
+
+The upstream VisHD pipeline supports within-sample and pooled-sample
+permutations. In SEAC, use `mode = "within"` (default) or `mode = "pooled"`
+with a named list of saved QC directories. The `legacy_hotspot` result uses
+the upstream lower-tail rank rule, while `fdr_significant` is an additional
+BH-adjusted test. A within-sample result for a given sample and seed is
+unchanged when other samples are added to the input list or reordered.
+Previously saved SEAC 0.99.1 within-sample checkpoints use a different seed
+scheme and must be restarted in a new output directory; pooled checkpoints
+are unchanged.
+
+# Relation to the Python VisHD pipeline
+
+The [October 2026 VisHD update](https://github.com/KummerfeldLab/VisHD/commit/6eafca6c45c8d6f1b28016b117bc851a1ea9cc53)
+added a per-sample permutation option alongside pooled permutations. SEAC's
+`within` and `pooled` modes correspond to these two null models. The R
+implementation draws category labels over UMI slots without expanding a long
+table of every UMI; it preserves the same category and bin totals. Within a
+sample, the seed for a permutation no longer depends on its position in a
+multi-sample list.
+
+The [later KDTree update](https://github.com/KummerfeldLab/VisHD/commit/4da1eaa3fd957bd34f5d3a9793cf623700637339)
+parallelized Python nearest-neighbor queries without changing the MaxMin
+definition. SEAC uses exact RANN queries and can parallelize independent
+permutation blocks through `BPPARAM`. Its HDF5 output contains per-bin
+`legacy_hotspot` calls equivalent to applying the upstream lower-tail rank
+threshold, plus Monte Carlo p-values and BH-adjusted results. The Python
+pipeline also creates annotated images; SEAC does not currently produce
+those images.
 
 # Reproducibility
 

@@ -2,6 +2,7 @@
 ^VisHD-main\.zip$
 ^PLAN\.md$
 ^METHODS\.md$
+^NEWS\.md$
 ^\.github$
 ^\.gitignore$
 ^SEAC_[^/]+[.]tar[.]gz$

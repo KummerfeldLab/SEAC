@@ -125,12 +125,10 @@
         null_scores <- if (identical(mode, "pooled")) {
             .seac_pooled_null(preps, this_seed)
         } else {
-            lapply(seq_len(n_samples), function(s) {
-                sample_seed <- as.integer(
-                    (as.double(this_seed) + s * 100000) %% .Machine$integer.max
-                )
-                .seac_within_null(preps[[s]], sample_seed)
-            })
+            # Match upstream per-sample permutations: permutation `id` has the
+            # same seed for each sample, irrespective of list order or whether
+            # a sample is run alone. Each sample draws only from its own UMIs.
+            lapply(preps, .seac_within_null, seed = this_seed)
         }
         for (s in seq_len(n_samples)) {
             n_less[[s]] <- n_less[[s]] + as.integer(null_scores[[s]] < preps[[s]]$observed)
@@ -242,11 +240,13 @@
 
 #' Run the MaxMin UMI-level permutation test
 #'
-#' @param x A post-QC `SpatialExperiment`, post-QC output directory, or named
-#'   list of either for multi-sample testing.
+#' @param x A post-QC `SpatialExperiment`, saved output directory from
+#'   [runBladeQC()], or named list of either for multi-sample testing. This
+#'   function does not run BLADE; perform QC and save the output first.
 #' @param gene_sets Named list of non-overlapping gene vectors.
 #' @param mode Whether to permute category labels within each sample or pooled
-#'   across multiple samples.
+#'   across multiple samples. Within-sample results for one sample do not
+#'   depend on which other samples are included or their order.
 #' @param n_permutations Number of UMI-level shuffles.
 #' @param legacy_alpha Lower-tail threshold used by the original pipeline.
 #' @param fdr_cutoff BH adjusted p-value cutoff.
@@ -291,7 +291,7 @@ maxMinPermutationTest <- function(x, gene_sets,
     .seac_assert_scalar_character(output_dir, "output_dir")
     checkpoint_dir <- file.path(output_dir, "checkpoints")
     specification <- list(
-        version = 2L,
+        version = if (identical(mode, "within")) 3L else 2L,
         sample_names = names(samples),
         input_signature = lapply(preps, .seac_input_signature),
         n_bins = vapply(preps, `[[`, numeric(1L), "n_bins"),
@@ -304,6 +304,10 @@ maxMinPermutationTest <- function(x, gene_sets,
         rng_version = "4.0.0",
         kdtree = list(k = 1L, eps = 0, distance = "euclidean-ceiling")
     )
+    if (identical(mode, "within")) {
+        specification$within_seed_scheme <-
+            "permutation-id-independent-of-sample-order"
+    }
 
     if (dir.exists(output_dir)) {
         if (!isTRUE(resume)) {

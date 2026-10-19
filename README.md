@@ -62,69 +62,93 @@ Use the matching bin size, for example `"002"`, `"008"`, or `"016"`.
 
 ## Minimal workflow
 
+Run BLADE explicitly. `runBladeQC()` saves the full mask and a disk-backed,
+filtered `SpatialExperiment` to `sample_SEAC_post_qc`. You can inspect this
+saved result before starting permutations.
+
+```r
+library(SEAC)
+
+qc_dir <- "sample_SEAC_post_qc"
+qc <- runBladeQC(
+    input_dir = "/path/to/spaceranger/outs",
+    output_dir = qc_dir,
+    bin_size = "016"
+)
+
+dim(qc)
+```
+
+The saved object is at `sample_SEAC_post_qc/spe`; the complete BLADE mask is
+at `sample_SEAC_post_qc/blade_mask.h5`. In a later R session, pass `qc_dir`
+directly to the permutation function. It reads the saved object and does not
+run BLADE again.
+
 Define at least two non-overlapping gene sets. Replace the mouse small-intestine
 examples below with genes present in your data. Gene names may be Ensembl
 feature IDs or 10x gene symbols.
 
 ```r
-library(SEAC)
-
 gene_sets <- list(
     Paneth = "Lyz1",
     Goblet = c("Muc2", "Clca1"),
     Enterocyte = c("Fabp1", "Fabp2", "Apoa4")
 )
 
-fit <- runSEAC(
-    input_dir = "/path/to/spaceranger/outs",
-    output_dir = "sample_SEAC",
-    bin_size = "016",
+tested <- maxMinPermutationTest(
+    x = qc_dir,
     gene_sets = gene_sets,
-    permutation = FALSE
+    output_dir = "sample_SEAC_permutation"
 )
 
-head(as.data.frame(SummarizedExperiment::colData(fit$post_qc)))
-```
-
-The scored post-QC object is saved at `sample_SEAC/post_qc/spe` and can be
-reopened in a new R session:
-
-```r
-post_qc <- HDF5Array::loadHDF5SummarizedExperiment(
-    "sample_SEAC/post_qc/spe"
-)
-```
-
-## Permutation test
-
-For a quick smoke test, start with a small number of permutations:
-
-```r
-fit <- runSEAC(
-    input_dir = "/path/to/spaceranger/outs",
-    output_dir = "sample_SEAC_smoke",
-    bin_size = "016",
-    gene_sets = gene_sets,
-    permutation = TRUE,
-    n_permutations = 20L,
-    chunk_size = 5L,
-    seed = 1L
-)
-
-results <- loadSEACResults("sample_SEAC_smoke/permutation")
+results <- loadSEACResults("sample_SEAC_permutation")
 head(results)
 ```
 
-Use substantially more permutations, such as the default 5,000, for a formal
-analysis. A small smoke test only checks that the workflow runs; it cannot
-support fine-grained p-values or biological claims.
+The default is 5,000 permutations. `legacy_hotspot` applies the upstream
+VisHD per-bin lower-tail threshold; `p_adjusted` and `fdr_significant` provide
+the additional BH-adjusted result. For a quick workflow smoke test, reduce
+`n_permutations` and `chunk_size`, using a new output directory:
+
+```r
+maxMinPermutationTest(
+    x = qc_dir,
+    gene_sets = gene_sets,
+    n_permutations = 20L,
+    chunk_size = 5L,
+    seed = 1L,
+    output_dir = "sample_SEAC_smoke"
+)
+```
+
+Twenty permutations only check that the workflow runs; they cannot support
+fine-grained p-values or biological claims. For multiple saved samples, pass
+a named list of QC directories:
+
+```r
+qc_dirs <- list(sample_A = "sample_A_post_qc", sample_B = "sample_B_post_qc")
+maxMinPermutationTest(
+    x = qc_dirs,
+    gene_sets = gene_sets,
+    mode = "within",  # use "pooled" for a shared cross-sample null
+    output_dir = "two_sample_permutation"
+)
+```
+
+In `within` mode, each sample's category totals are preserved. Running one
+sample alone or alongside other samples with the same seed gives the same
+result for that sample. In `pooled` mode, category totals are preserved across
+the full cohort, so results depend on the cohort supplied.
 
 Interrupted permutation runs are checkpointed. Repeat the same call with the
-same output directory and `resume = TRUE` to continue it.
+same output directory and `resume = TRUE` to continue it. The updated
+within-sample seed scheme cannot resume within-sample checkpoints made with
+SEAC 0.99.1; start those analyses in a new output directory. Pooled-mode
+checkpoints are unchanged.
 
 ## Real-data smoke test
 
-The end-to-end workflow was tested with the official 10x Genomics Visium HD
+The staged workflow was tested with the official 10x Genomics Visium HD
 Mouse Small Intestine binned outputs. The 16 µm test input contained 19,059
 features, 91,033 filtered bins, and 138,666,717 UMIs. SEAC retained 83,408 bins
 and successfully wrote and reloaded its post-QC object, checkpoints, and
