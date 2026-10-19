@@ -16,6 +16,19 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
     steps:
       - uses: actions/checkout@v6
+      - name: Reject Chinese characters in tracked files
+        run: |
+          set +e
+          git grep -nP '(*UTF)[\p{Han}\x{3000}-\x{303F}\x{FF00}-\x{FFEF}]'
+          grep_exit=$?
+          set -e
+          if [ "$grep_exit" -eq 0 ]; then
+            echo "Chinese characters found in tracked files." >&2
+            exit 1
+          fi
+          if [ "$grep_exit" -ne 1 ]; then
+            exit "$grep_exit"
+          fi
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: release
