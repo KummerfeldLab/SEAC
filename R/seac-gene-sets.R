@@ -5,6 +5,9 @@
 #'
 #' @format A named list of character vectors.
 #' @export
+#' @examples
+#' names(seacGeneSets)
+#' seacGeneSets[["SASP"]]
 seacGeneSets <- list(
     SASP = c("IL1B", "IL6", "CXCL12", "CCL2", "CXCL8", "TGFB1", "VEGFA"),
     EMC = c("PLAUR", "PLAU", "PAPPA", "MMP14", "ADAMTS4", "COL6A1", "THBS1"),

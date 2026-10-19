@@ -1,10 +1,15 @@
 Package: SEAC
 Type: Package
 Title: KD-Tree Quality Control and Gene-Set Co-Localization for Visium HD
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: c(
-    person("SEAC", "Development Team", role = c("aut", "cre"),
-           email = "maintainer@example.org")
+    person("Yinzhao", "Wang", role = c("aut", "cre"),
+           email = "wan00232@umn.edu",
+           comment = "Kummerfeld Lab, University of Minnesota"),
+    person("Erich", "Kummerfeld", role = "ctb",
+           comment = "Methodology and scientific supervision"),
+    person("Leland", "Williams", role = "ctb",
+           comment = "Original Python VisHD implementation and methodology")
     )
 Description: Imports 10x Genomics Visium HD Space Ranger outputs, applies a
     KD-tree radius mask derived from capture-border and non-tissue positions,
@@ -45,5 +50,5 @@ Suggests:
     VisiumIO
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://github.com/KummerfeldLab/VisHD_R
-BugReports: https://github.com/KummerfeldLab/VisHD_R/issues
+URL: https://github.com/KummerfeldLab/SEAC
+BugReports: https://github.com/KummerfeldLab/SEAC/issues

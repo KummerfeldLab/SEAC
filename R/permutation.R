@@ -259,6 +259,25 @@
 #' @return A `SpatialExperiment`, or named list of them, with result columns in
 #'   `colData`.
 #' @export
+#' @examples
+#' counts <- rbind(A = c(1L, 0L, 0L, 1L),
+#'                 B = c(0L, 1L, 1L, 0L))
+#' colnames(counts) <- paste0("bin", 1:4)
+#' coords <- S4Vectors::DataFrame(
+#'     array_col = c(1L, 2L, 1L, 2L),
+#'     array_row = c(1L, 1L, 2L, 2L),
+#'     row.names = colnames(counts)
+#' )
+#' spe <- SpatialExperiment::SpatialExperiment(
+#'     assays = list(counts = counts), colData = coords,
+#'     spatialCoordsNames = c("array_col", "array_row")
+#' )
+#' output <- tempfile("seac-permutations-")
+#' tested <- maxMinPermutationTest(
+#'     spe, list(first = "A", second = "B"),
+#'     n_permutations = 3L, output_dir = output
+#' )
+#' head(loadSEACResults(output))
 maxMinPermutationTest <- function(x, gene_sets,
                                   mode = c("within", "pooled"),
                                   n_permutations = 5000L,
@@ -399,6 +418,25 @@ maxMinPermutationTest <- function(x, gene_sets,
 #'
 #' @return A data frame of per-bin test results.
 #' @export
+#' @examples
+#' counts <- rbind(A = c(1L, 0L, 0L, 1L),
+#'                 B = c(0L, 1L, 1L, 0L))
+#' colnames(counts) <- paste0("bin", 1:4)
+#' coords <- S4Vectors::DataFrame(
+#'     array_col = c(1L, 2L, 1L, 2L),
+#'     array_row = c(1L, 1L, 2L, 2L),
+#'     row.names = colnames(counts)
+#' )
+#' spe <- SpatialExperiment::SpatialExperiment(
+#'     assays = list(counts = counts), colData = coords,
+#'     spatialCoordsNames = c("array_col", "array_row")
+#' )
+#' output <- tempfile("seac-results-")
+#' maxMinPermutationTest(
+#'     spe, list(first = "A", second = "B"),
+#'     n_permutations = 3L, output_dir = output
+#' )
+#' loadSEACResults(output, barcodes = "bin1")
 loadSEACResults <- function(output_dir, sample_id = NULL, barcodes = NULL) {
     path <- file.path(output_dir, "results.h5")
     if (!file.exists(path)) .seac_abort("No results.h5 found in: ", output_dir)

@@ -107,6 +107,14 @@
 #'
 #' @return A HDF5-backed `SpatialExperiment` containing non-BLADE bins.
 #' @export
+#' @examples
+#' if (requireNamespace("VisiumIO", quietly = TRUE)) {
+#'     input <- system.file("extdata", package = "VisiumIO")
+#'     output <- tempfile("seac-qc-")
+#'     qc <- runBladeQC(input, output, bin_size = "002",
+#'                      sample_id = "example")
+#'     dim(qc)
+#' }
 runBladeQC <- function(input_dir, output_dir = NULL, bin_size = "002",
                        sample_id = NULL) {
     paths <- .seac_resolve_hd_paths(input_dir, bin_size)

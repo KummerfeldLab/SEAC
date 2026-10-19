@@ -45,5 +45,35 @@ positions <- data.frame(
     array_row = c(1L, 1L, 2L, 2L), array_col = c(1L, 2L, 1L, 2L)
 )
 bladeMaskHD(positions)
+
+# The small VisiumIO example exercises import and BLADE QC.
+if (requireNamespace("VisiumIO", quietly = TRUE)) {
+    input <- system.file("extdata", package = "VisiumIO")
+    qc_output <- tempfile("seac-qc-")
+    qc <- runBladeQC(input, qc_output, bin_size = "002",
+                     sample_id = "example")
+    dim(qc)
+}
+
+# A post-QC toy object with positive counts exercises MaxMin and permutations.
+counts <- rbind(A = c(1L, 0L, 0L, 1L),
+                B = c(0L, 1L, 1L, 0L))
+colnames(counts) <- paste0("bin", 1:4)
+coords <- S4Vectors::DataFrame(
+    array_col = c(1L, 2L, 1L, 2L),
+    array_row = c(1L, 1L, 2L, 2L),
+    row.names = colnames(counts)
+)
+spe <- SpatialExperiment::SpatialExperiment(
+    assays = list(counts = counts), colData = coords,
+    spatialCoordsNames = c("array_col", "array_row")
+)
+sets <- list(first = "A", second = "B")
+maxMinScore(spe, sets)$maxmin
+permutation_output <- tempfile("seac-permutations-")
+maxMinPermutationTest(spe, sets, n_permutations = 3L,
+                      output_dir = permutation_output)
+loadSEACResults(permutation_output, barcodes = "bin1")
+names(seacGeneSets)
 }
 \references{Kummerfeld E, et al. (2025). Artifacts in spatial transcriptomics data: their detection, importance, prevalence, and prevention. \emph{Briefings in Bioinformatics}, 26(4), bbaf306. \doi{10.1093/bib/bbaf306}.}

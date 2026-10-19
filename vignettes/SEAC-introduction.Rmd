@@ -1,6 +1,6 @@
 ---
 title: "KD-tree BLADE QC and MaxMin testing with SEAC"
-author: "SEAC Development Team"
+author: "Yinzhao Wang (Kummerfeld Lab)"
 date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
@@ -22,6 +22,14 @@ library(S4Vectors)
 SEAC performs a KD-tree BLADE mask and a general MaxMin gene-set spatial co-localization analysis for Visium HD. Capture-boundary and non-tissue positions are KD-tree seeds; bins whose nearest seed has Euclidean distance at most one are excluded.
 
 The published BLADE project also includes slide-level artefact tests. SEAC documents its narrower local KD-tree HD mask rather than claiming to implement those additional methods.
+
+SEAC is an R implementation developed by Yinzhao Wang in the Kummerfeld Lab.
+The scientific methods and the original Python VisHD implementation were
+developed with contributions from Erich Kummerfeld and Leland (Lee) Williams,
+respectively. Cite the original [spatial artefact study](https://doi.org/10.1093/bib/bbaf306)
+for the underlying methods; cite the SEAC package separately for this R
+implementation. The Python source is available at
+[KummerfeldLab/VisHD](https://github.com/KummerfeldLab/VisHD).
 
 # A small SpatialExperiment
 
@@ -59,6 +67,24 @@ head(loadSEACResults(out))
 
 # Space Ranger data
 
+The small Visium HD example included with `VisiumIO` exercises the actual
+Space Ranger import and BLADE output path. Its post-QC count matrix is all
+zero, so the gene-set permutation demonstration above uses a separate toy
+`SpatialExperiment` with positive counts.
+
+```{r visiumio-import, message=FALSE}
+example_dir <- system.file("extdata", package = "VisiumIO", mustWork = TRUE)
+qc_dir <- tempfile("seac-visiumio-qc-")
+qc <- runBladeQC(
+    input_dir = example_dir,
+    output_dir = qc_dir,
+    bin_size = "002",
+    sample_id = "visiumio-example"
+)
+dim(qc)
+file.exists(file.path(qc_dir, "blade_mask.h5"))
+```
+
 For a standard Space Ranger Visium HD output, call `runBladeQC()` yourself
 with its root, `outs`, or a `square_XXXum` path. It saves a HDF5-backed
 `SpatialExperiment`, a complete audit mask, and a JSON manifest. Review the
@@ -68,6 +94,11 @@ function reads the saved object; it never applies BLADE automatically.
 Gene sets can contain Ensembl feature IDs or 10x gene symbols. SEAC resolves
 the latter from `rowData(qc)$Symbol`, including every feature row that shares a
 requested symbol.
+
+The following is a template for an external full-size data set; it is not
+evaluated when the vignette is built because the 10x data are not distributed
+with this package and a full permutation analysis is too expensive for a
+package check.
 
 ```{r spaceranger, eval=FALSE}
 gene_sets <- list(

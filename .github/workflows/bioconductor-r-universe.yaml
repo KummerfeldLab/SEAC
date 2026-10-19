@@ -1,0 +1,17 @@
+name: Bioconductor R-universe checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  build:
+    name: R-universe build, check, and BiocCheck
+    uses: r-universe-org/workflows/.github/workflows/build.yml@v3
+    with:
+      universe: bioc
+      organization: bioconductor

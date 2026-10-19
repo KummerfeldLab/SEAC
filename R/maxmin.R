@@ -132,7 +132,19 @@
 #' @export
 #'
 #' @examples
-#' # See the package vignette for a SpatialExperiment example.
+#' counts <- rbind(A = c(1L, 0L, 0L, 1L),
+#'                 B = c(0L, 1L, 1L, 0L))
+#' colnames(counts) <- paste0("bin", 1:4)
+#' coords <- S4Vectors::DataFrame(
+#'     array_col = c(1L, 2L, 1L, 2L),
+#'     array_row = c(1L, 1L, 2L, 2L),
+#'     row.names = colnames(counts)
+#' )
+#' spe <- SpatialExperiment::SpatialExperiment(
+#'     assays = list(counts = counts), colData = coords,
+#'     spatialCoordsNames = c("array_col", "array_row")
+#' )
+#' maxMinScore(spe, list(first = "A", second = "B"))$maxmin
 maxMinScore <- function(spe, gene_sets) {
     components <- .seac_score_components(spe, gene_sets)
     cd <- SummarizedExperiment::colData(spe)

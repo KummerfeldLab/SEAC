@@ -6,7 +6,7 @@ SEAC is an R package for 10x Genomics Visium HD data. It provides:
 - a MaxMin score for spatial co-localization of two or more gene sets; and
 - an optional UMI-level permutation test with checkpoints and HDF5 results.
 
-The R package is named `SEAC`; its GitHub repository is `VisHD_R`.
+The R package and its GitHub repository are both named `SEAC`.
 
 ## Install from GitHub
 
@@ -24,7 +24,7 @@ if (!requireNamespace("remotes", quietly = TRUE)) {
     BiocManager::install("remotes")
 }
 remotes::install_github(
-    "KummerfeldLab/VisHD_R",
+    "KummerfeldLab/SEAC",
     build_vignettes = FALSE
 )
 ```
@@ -41,7 +41,7 @@ After cloning or downloading this repository, use the same setup above and run:
 
 ```r
 remotes::install_local(
-    "/path/to/VisHD_R",
+    "/path/to/SEAC",
     build_vignettes = FALSE
 )
 ```

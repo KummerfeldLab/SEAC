@@ -3,9 +3,10 @@ citHeader("To cite SEAC in publications use:")
 citEntry(
     entry = "Manual",
     title = "SEAC: KD-Tree Quality Control and Gene-Set Co-Localization for Visium HD",
-    author = "SEAC Development Team",
+    author = "Yinzhao Wang",
     year = "2026",
-    note = "R package version 0.99.1"
+    note = paste("R package version", meta$Version),
+    url = "https://github.com/KummerfeldLab/SEAC"
 )
 
 citEntry(
